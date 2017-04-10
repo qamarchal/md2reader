@@ -1,0 +1,89 @@
+{
+    "name": "md2reader",
+    "displayName": "md2reader",
+    "description": "Markdown to epub/mobi converter",
+    "version": "0.0.1",
+    "publisher": "gdrtf",
+    "engines": {
+        "vscode": "^1.10.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:extension.md2reader"
+    ],
+    "main": "./out/src/extension",
+    "contributes": {
+        "commands": [{
+            "command": "extension.md2reader",
+            "title": "Convert Markdown to EPUB/MOBI"
+        }],
+        "configuration": {
+            "title": "md2reader configuration",
+            "properties": {
+                "md2reader.inputType": {
+                    "title": "Input type",
+                    "description": "The extension of the files to convert (md, txt)",
+                    "default": "md",
+                    "oneOf": {
+                        "type": "string",
+                        "enum": [
+                            "md",
+                            "txt"
+                        ]
+                    }
+                },
+                "md2reader.outputDir": {
+                    "title": "Output directory",
+                    "description": "This path may be absolute or relative to the workspace",
+                    "type": "string",
+                    "default": "."
+                },
+                "md2reader.recurse": {
+                    "title": "Include subfolders",
+                    "type": "boolean",
+                    "default": false
+                },
+                "md2reader.type": {
+                    "title": "Conversion types",
+                    "description": "This parameter can be a single or a set of conversion types",
+                    "default": ["epub", "mobi"],
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "enum": [
+                                "epub",
+                                "mobi"
+                            ]
+                        },
+                        {
+                            "type": "array",
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "epub",
+                                    "mobi"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^2.0.3",
+        "vscode": "^1.0.0",
+        "mocha": "^2.3.3",
+        "@types/node": "^6.0.40",
+        "@types/mocha": "^2.2.32"
+    }
+}
