@@ -22,18 +22,6 @@
         "configuration": {
             "title": "md2reader configuration",
             "properties": {
-                "md2reader.sourceType": {
-                    "title": "Source type",
-                    "description": "The extension of the files to convert (md, txt)",
-                    "default": "md",
-                    "oneOf": {
-                        "type": "string",
-                        "enum": [
-                            "md",
-                            "txt"
-                        ]
-                    }
-                },
                 "md2reader.outputDir": {
                     "title": "Output directory",
                     "description": "This path may be absolute or relative to the workspace",
@@ -50,6 +38,12 @@
                     "title": "CSS file",
                     "type": "string",
                     "default": null
+                },
+                "md2reader.onlyActiveFile": {
+                    "title": "Only convert the active file",
+                    "description": "Save the file before the conversion",
+                    "type": "boolean",
+                    "default": false
                 },
                 "md2reader.singleOutput": {
                     "title": "Convert to a single epub/mobi file",
