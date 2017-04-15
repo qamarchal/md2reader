@@ -2,10 +2,20 @@
     "name": "md2reader",
     "displayName": "md2reader",
     "description": "Markdown to epub/mobi converter",
-    "version": "0.6.0",
+    "version": "0.8.0",
     "publisher": "gdrtf",
     "engines": {
         "vscode": "^1.10.0"
+    },
+    "keywords": [
+        "Markdown",
+        "Convert",
+        "EPUB",
+        "MOBI"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/gdrtf/md2reader.git"
     },
     "categories": [
         "Other"
