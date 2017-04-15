@@ -40,10 +40,27 @@
                     "type": "string",
                     "default": "."
                 },
+                "md2reader.workingDir": {
+                    "title": "Working directory",
+                    "description": "This path may only be relative to the workspace",
+                    "type": "string",
+                    "default": "."
+                },
                 "md2reader.cssFile": {
                     "title": "CSS file",
                     "type": "string",
                     "default": null
+                },
+                "md2reader.singleOutput": {
+                    "title": "Convert to a single epub/mobi file",
+                    "type": "boolean",
+                    "default": false
+                },
+                "md2reader.outputFile": {
+                    "title": "Name of the epub/mobi file",
+                    "description": "Only if md2reader.single is true",
+                    "type": "string",
+                    "default": "Untitled"
                 },
                 "md2reader.recurse": {
                     "title": "Include subfolders",
