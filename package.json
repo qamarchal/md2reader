@@ -2,7 +2,7 @@
     "name": "md2reader",
     "displayName": "md2reader",
     "description": "Markdown to epub/mobi converter",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "publisher": "gdrtf",
     "engines": {
         "vscode": "^1.10.0"
@@ -11,12 +11,12 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.md2reader"
+        "onCommand:md2reader.convert"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [{
-            "command": "extension.md2reader",
+            "command": "md2reader.convert",
             "title": "Convert Markdown to EPUB/MOBI"
         }],
         "configuration": {

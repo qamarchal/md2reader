@@ -10,7 +10,7 @@ import { Converter } from "./Converter";
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-    let disposable = vscode.commands.registerCommand('extension.md2reader', () => {
+    let disposable = vscode.commands.registerCommand('md2reader.convert', () => {
         temp.track();
         let config = vscode.workspace.getConfiguration("md2reader");
         let workingDir = config.get<string>('workingDir');
