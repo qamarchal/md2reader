@@ -2,7 +2,7 @@
     "name": "md2reader",
     "displayName": "md2reader",
     "description": "Markdown to epub/mobi converter",
-    "version": "0.4.0",
+    "version": "0.6.0",
     "publisher": "gdrtf",
     "engines": {
         "vscode": "^1.10.0"
@@ -104,8 +104,11 @@
         "typescript": "^2.0.3",
         "vscode": "^1.0.0",
         "mocha": "^2.3.3",
-        "temp": "^0.8.3",
         "@types/node": "^6.0.40",
         "@types/mocha": "^2.2.32"
+    },
+    "dependencies": {
+        "mkdirp": "^0.5.1",
+        "temp": "^0.8.3"
     }
 }
