@@ -5,102 +5,132 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as childprocess from 'child_process';
+import * as mkdirp from 'mkdirp';
+import * as temp from 'temp';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
     let disposable = vscode.commands.registerCommand('extension.md2reader', () => {
-        
+        temp.track();
         let config = vscode.workspace.getConfiguration("md2reader");
-        let findPattern = '*.' + config.get('inputType');
+        let findPattern = '*.' + config.get('sourceType');
         if (config.get('recurse') as boolean) {
             findPattern = '**/' + findPattern
         }
         let files = vscode.workspace.findFiles(findPattern);
-        let outputDir = getOutputDir(config.get('outputDir'));
-        let type = config.get('type');
-        let types = [];
-        if (typeof type == 'string') {
-            types = [type];
+        let outputDir = resolve(config.get('outputDir'), true);
+        let types = getTypes(config);
+        let toEpub = types.indexOf("epub") > -1;
+        let toMobi = types.indexOf("mobi") > -1;
+        checkDependencies(toMobi);
+        let css = config.get('cssFile') as string;
+        if (css) {
+            css = resolve(css);
         } else {
-            for (var index in type) {
-                types.push(type[index]);
-            }
+            css = path.join(__dirname, "..", "..", "ressources/default.css");
         }
-        if (types.length == 0) {
-            vscode.window.showErrorMessage("No conversion type");
-            return;
-        }
-        let fromHTMLTypes = [];
-        let toEpub = false;
-        types.forEach(function (type, index) {
-            if (type === "epub") {
-                toEpub = true;
-            } else {
-                fromHTMLTypes.push(type[index]);
-            }
-        });
         files.then((uris) => {
             uris.sort().forEach(function (uri, index) {
                 let basename = path.basename(uri.path);
                 let name = basename.substring(0, basename.lastIndexOf('.'));
-                let pandoc = "pandoc " + uri.fsPath + " -o ";
-                if (toEpub) {
-                    let cmd = pandoc + path.join(outputDir, name + ".epub");
-                    childprocess.exec(cmd, function(err, stdout, stderr) {
-                        console.log("Executing command: " + cmd);
-                        if (err)
-                            console.log(err);
-                    });
-                }
-                if (fromHTMLTypes.length > 0) {
-                    let htmlFile = path.join(outputDir, name + ".html");
-                    let b = path.join(outputDir, name + "_b");
-                    let a = path.join(outputDir, name + "_a");
-                    fs.writeFileSync(b, "<div style=\"text-align: justify; text-justify: inter-word; font-size:small\">", "utf-8");
-                    fs.writeFileSync(a, "</div>", "utf-8");
-                    let cmd = pandoc + htmlFile + " -t HTML -s --ascii -B " + b + " -A " + a;
-                    childprocess.exec(cmd, function(err, stdout, stderr) {
-                        console.log("Executing command: " + cmd);
-                        if (err)
-                            console.log(err);
-                        cmd = "kindlegen " + htmlFile;
-                        childprocess.exec(cmd, function(err, stdout, stderr) {
-                            console.log("Executing command: " + cmd);
-                            if (err)
-                                console.log(err);
-                            fs.unlink(htmlFile);
-                            fs.unlink(a);
-                            fs.unlink(b);
+                let pargs = [
+                    uri.fsPath,
+                    "-o"
+                ];
+                temp.mkdir('md2reader', function(err, tempDir) {
+                    if (toEpub) {
+                        let args = pargs.concat([
+                            path.join(outputDir, name + ".epub"),
+                            "--epub-stylesheet=" + css
+                        ]);
+                        childprocess.execFile("pandoc", args, function(err, stdout, stderr) {
+                            console.log(stdout);
                         });
-                    });
-                }
+                    }
+                    if (toMobi) {
+                        let html = path.join(tempDir, name + ".html");
+                        let args = pargs.concat([
+                            html,
+                            "-t",
+                            "HTML",
+                            "-s",
+                            "--ascii",
+                            "-c",
+                            css
+                        ]);
+                        childprocess.execFile("pandoc", args, function(err, stdout, stderr) {
+                            console.log(stdout);
+                            let mobiFile = name + ".mobi";
+                            args = [
+                                html,
+                                "-o",
+                                mobiFile
+                            ];
+                            childprocess.execFile("kindlegen", args, function(err, stdout, stderr) {
+                                console.log(stdout);
+                                fs.rename(path.join(tempDir, mobiFile), path.join(outputDir, mobiFile))
+                            });
+                        });
+                    }
+                });
         })});
-        vscode.window.showInformationMessage("Done");
+        //vscode.window.showInformationMessage("Files converted in " + outputDir);
     });
     context.subscriptions.push(disposable);
 }
 
-function getOutputDir(outputDir) {
-    let warn = 'Output directory does not exist : ' + outputDir;
+function resolve(uri, dir = false) {
     try {
-        if (path.isAbsolute(outputDir) && fs.existsSync(outputDir) && fs.statSync(outputDir).isDirectory()) {
-            return outputDir;
+        if (!path.isAbsolute(uri)) {
+            uri = path.resolve(vscode.workspace.rootPath, uri);
         }
-        let outputPath = path.join(vscode.workspace.rootPath, outputDir)
-        if (fs.existsSync(outputPath) && fs.statSync(outputPath).isDirectory()) {
-            return outputPath;
+        if (!dir) {
+            return uri;
         }
-        vscode.window.showInformationMessage(warn);
-        if (!outputDir.includes('/') && !outputDir.includes('\\')) {
-            fs.mkdir(outputPath);
-            return outputPath;
+        if (!fs.existsSync(uri) || !fs.statSync(uri).isDirectory()) {
+            mkdirp.sync(uri);
         }
+        return uri;
     } catch (e) {
-        vscode.window.showInformationMessage(warn);
+        vscode.window.showInformationMessage('Path not found: ' + uri);
+        return vscode.workspace.rootPath;
     }
-    return vscode.workspace.rootPath;
+}
+
+function checkDependencies(kindle) {
+    try {
+        childprocess.execSync("pandoc -h");
+    } catch (e) {
+        vscode.window.showErrorMessage("Pandoc is not installed");
+        return;
+    }
+    if (!kindle)
+        return;
+    try {
+        childprocess.execSync("kindlegen");
+    } catch (e) {
+        vscode.window.showErrorMessage("Kindlegen is not installed");
+        return;
+    }
+}
+
+function getTypes(config) {
+    let type = config.get('type');
+    let types : Array<string> = [];
+    if (typeof type == 'string') {
+        types = [type];
+    } else {
+        for (var index in type) {
+            types.push(type[index]);
+        }
+    }
+    if (types.length == 0) {
+        vscode.window.showErrorMessage("No conversion type");
+        return;
+    }
+    return types;
 }
 
 // this method is called when your extension is deactivated

@@ -22,8 +22,8 @@
         "configuration": {
             "title": "md2reader configuration",
             "properties": {
-                "md2reader.inputType": {
-                    "title": "Input type",
+                "md2reader.sourceType": {
+                    "title": "Source type",
                     "description": "The extension of the files to convert (md, txt)",
                     "default": "md",
                     "oneOf": {
@@ -39,6 +39,11 @@
                     "description": "This path may be absolute or relative to the workspace",
                     "type": "string",
                     "default": "."
+                },
+                "md2reader.cssFile": {
+                    "title": "CSS file",
+                    "type": "string",
+                    "default": null
                 },
                 "md2reader.recurse": {
                     "title": "Include subfolders",
