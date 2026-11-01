@@ -59,9 +59,12 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage('This document is not a markdown file');
             return;
         }
-        let config = vscode.workspace.getConfiguration("md2reader");
-        let converter = new Converter(config);
-        converter.ExecuteFile(vscode.window.activeTextEditor.document.uri);
+        let targetUri = vscode.window.activeTextEditor.document.uri;
+        vscode.workspace.saveAll(false).then(() => {
+            let config = vscode.workspace.getConfiguration("md2reader");
+            let converter = new Converter(config);
+            converter.ExecuteFile(targetUri);
+        });
     });
 
     let convertDirectory = vscode.commands.registerCommand('md2reader.convertDirectory', () => {
@@ -70,10 +73,12 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage('No active document to determine current directory');
             return;
         }
-        let config = vscode.workspace.getConfiguration("md2reader");
         let activeDir = path.dirname(vscode.window.activeTextEditor.document.uri.fsPath);
-        let files = findMarkdownFiles(activeDir, config.get<boolean>('recurse') || false);
-        convertFiles(files, config, activeDir);
+        vscode.workspace.saveAll(false).then(() => {
+            let config = vscode.workspace.getConfiguration("md2reader");
+            let files = findMarkdownFiles(activeDir, config.get<boolean>('recurse') || false);
+            convertFiles(files, config, activeDir);
+        });
     });
 
     let convertWorkspace = vscode.commands.registerCommand('md2reader.convertWorkspace', () => {
@@ -93,8 +98,10 @@ export function activate(context: vscode.ExtensionContext) {
             findPattern = path.posix.join('**', findPattern);
         }
         findPattern = path.posix.join(workingDir.replace(/\\/g, '/'), findPattern);
-        vscode.workspace.findFiles(findPattern).then(files => {
-            convertFiles(files, config, vscode.workspace.rootPath);
+        vscode.workspace.saveAll(false).then(() => {
+            vscode.workspace.findFiles(findPattern).then(files => {
+                convertFiles(files, config, vscode.workspace.rootPath);
+            });
         });
     });
 

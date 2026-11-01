@@ -4,7 +4,7 @@ Visual Studio Code extension to convert markdown to EPUB/MOBI.
 
 ## Usage
 
-Open a markdown file or a folder on Visual Studio Code and choose "Convert Current Markdown File to EPUB/MOBI", "Convert Current Directory Markdown to EPUB/MOBI", or "Convert Workspace Markdown to EPUB/MOBI" in the command palette (F1).
+Open a markdown file or a folder on Visual Studio Code and choose "Convert Current Markdown File to EPUB/MOBI", "Convert Current Directory Markdown to EPUB/MOBI", or "Convert Workspace Markdown to EPUB/MOBI" in the command palette (F1). Modified files are automatically saved before conversion.
 
 ## Settings
 
