@@ -21,14 +21,24 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:md2reader.convert"
+        "onCommand:md2reader.convertFile",
+        "onCommand:md2reader.convertDirectory",
+        "onCommand:md2reader.convertWorkspace"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [
             {
-                "command": "md2reader.convert",
-                "title": "Convert Markdown to EPUB/MOBI"
+                "command": "md2reader.convertFile",
+                "title": "Convert Current Markdown File to EPUB/MOBI"
+            },
+            {
+                "command": "md2reader.convertDirectory",
+                "title": "Convert Current Directory Markdown to EPUB/MOBI"
+            },
+            {
+                "command": "md2reader.convertWorkspace",
+                "title": "Convert Workspace Markdown to EPUB/MOBI"
             }
         ],
         "configuration": {
@@ -50,12 +60,6 @@
                     "title": "CSS file",
                     "type": "string",
                     "default": null
-                },
-                "md2reader.onlyActiveFile": {
-                    "title": "Only convert the active file",
-                    "description": "Save the file before the conversion",
-                    "type": "boolean",
-                    "default": false
                 },
                 "md2reader.singleOutput": {
                     "title": "Convert to a single epub/mobi file",

@@ -3,65 +3,102 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import * as temp from 'temp';
 import { Converter } from "./Converter";
+
+function findMarkdownFiles(dir: string, recurse: boolean): Array<vscode.Uri> {
+    let results: Array<vscode.Uri> = [];
+    let list = fs.readdirSync(dir);
+    list.forEach(file => {
+        let fullPath = path.join(dir, file);
+        let stat = fs.statSync(fullPath);
+        if (stat && stat.isDirectory()) {
+            if (recurse) {
+                results = results.concat(findMarkdownFiles(fullPath, recurse));
+            }
+        } else if (path.extname(file).toLowerCase() === '.md') {
+            results.push(vscode.Uri.file(fullPath));
+        }
+    });
+    return results;
+}
+
+function convertFiles(files: Array<vscode.Uri>, config: vscode.WorkspaceConfiguration, cwd?: string) {
+    if (files.length === 0) {
+        vscode.window.showErrorMessage('No markdown file found');
+        return;
+    }
+    let converter = new Converter(config);
+    let single = config.get<boolean>('singleOutput');
+    var inputs: Array<string> = [];
+    files.sort((a, b) => a.fsPath.localeCompare(b.fsPath)).forEach(function (file) {
+        if (single) {
+            inputs.push(file.fsPath);
+        } else {
+            converter.ExecuteFile(file);
+        }
+    });
+    if (single && inputs.length > 0) {
+        inputs.push("-o");
+        converter.Execute(inputs, config.get('outputFile', "Untitled"), cwd);
+    }
+}
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-    let disposable = vscode.commands.registerCommand('md2reader.convert', () => {
+    let convertFile = vscode.commands.registerCommand('md2reader.convertFile', () => {
         temp.track();
+        if (!vscode.window.activeTextEditor) {
+            vscode.window.showErrorMessage('No active document to convert');
+            return;
+        }
+        if (vscode.window.activeTextEditor.document.languageId != 'markdown') {
+            vscode.window.showErrorMessage('This document is not a markdown file');
+            return;
+        }
+        let config = vscode.workspace.getConfiguration("md2reader");
+        let converter = new Converter(config);
+        converter.ExecuteFile(vscode.window.activeTextEditor.document.uri);
+    });
+
+    let convertDirectory = vscode.commands.registerCommand('md2reader.convertDirectory', () => {
+        temp.track();
+        if (!vscode.window.activeTextEditor) {
+            vscode.window.showErrorMessage('No active document to determine current directory');
+            return;
+        }
+        let config = vscode.workspace.getConfiguration("md2reader");
+        let activeDir = path.dirname(vscode.window.activeTextEditor.document.uri.fsPath);
+        let files = findMarkdownFiles(activeDir, config.get<boolean>('recurse') || false);
+        convertFiles(files, config, activeDir);
+    });
+
+    let convertWorkspace = vscode.commands.registerCommand('md2reader.convertWorkspace', () => {
+        temp.track();
+        if (!vscode.workspace.rootPath) {
+            vscode.window.showErrorMessage('No workspace opened');
+            return;
+        }
         let config = vscode.workspace.getConfiguration("md2reader");
         let workingDir = config.get<string>('workingDir') || ".";
         if (path.isAbsolute(workingDir)) {
             vscode.window.showErrorMessage("The working directory can only be relative to the workspace");
-            return
+            return;
         }
-        let converter = new Converter(config);
-        if (config.get<boolean>("onlyActiveFile") || !vscode.workspace.rootPath) {
-            if (!vscode.window.activeTextEditor) {
-                vscode.window.showErrorMessage('No active document to convert');
-                return;
-            }
-            var mode = vscode.window.activeTextEditor.document.languageId;
-            if (mode != 'markdown') {
-                vscode.window.showErrorMessage('This document is not a markdown file');
-                return;
-            }
-            converter.ExecuteFile(vscode.window.activeTextEditor.document.uri);
-        } else {
-            let single = config.get<boolean>('singleOutput');
-            let findPattern = '*.md';
-            if (config.get<boolean>('recurse')) {
-                findPattern = path.posix.join('**', findPattern);
-            }
-            findPattern = path.posix.join(workingDir.replace(/\\/g, '/'), findPattern);
-            vscode.workspace.findFiles(findPattern).then(files => {
-                if (files.length === 0) {
-                    if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.languageId == 'markdown') {
-                        converter.ExecuteFile(vscode.window.activeTextEditor.document.uri);
-                    } else {
-                        vscode.window.showErrorMessage('No markdown file found');
-                    }
-                    return;
-                }
-                var inputs: Array<string> = [];
-                files.sort().forEach(function (file, index) {
-                    if (single) {
-                        inputs.push(file.fsPath);
-                    } else {
-                        converter.ExecuteFile(file);
-                    }
-                });
-                if (single && inputs.length > 0) {
-                    inputs.push("-o");
-                    converter.Execute(inputs, config.get('outputFile', "Untitled"));
-                }
-            });
+        let findPattern = '*.md';
+        if (config.get<boolean>('recurse')) {
+            findPattern = path.posix.join('**', findPattern);
         }
+        findPattern = path.posix.join(workingDir.replace(/\\/g, '/'), findPattern);
+        vscode.workspace.findFiles(findPattern).then(files => {
+            convertFiles(files, config, vscode.workspace.rootPath);
+        });
     });
-    context.subscriptions.push(disposable);
+
+    context.subscriptions.push(convertFile, convertDirectory, convertWorkspace);
 }
 
 // this method is called when your extension is deactivated
