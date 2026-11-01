@@ -107,7 +107,18 @@ export class Converter {
                         return;
                     }
                     console.log(stdout);
-                    fs.rename(path.join(tempDir, mobiFile), path.join(moveTo, mobiFile), () => {});
+                    let src = path.join(tempDir, mobiFile);
+                    let dest = path.join(moveTo, mobiFile);
+                    fs.rename(src, dest, (renameErr) => {
+                        if (renameErr) {
+                            fs.copyFile(src, dest, (copyErr) => {
+                                if (copyErr) {
+                                    vscode.window.showErrorMessage(copyErr.message);
+                                }
+                                fs.unlink(src, () => {});
+                            });
+                        }
+                    });
                 });
             });
         }
