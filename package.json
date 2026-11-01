@@ -75,10 +75,9 @@
                 },
                 "md2reader.type": {
                     "title": "Conversion types",
-                    "description": "This parameter can be a single or a set of conversion types",
+                    "description": "This parameter can be a single or a set of conversion types (\"epub\", \"mobi\", or [\"epub\", \"mobi\"])",
                     "default": [
-                        "epub",
-                        "mobi"
+                        "epub"
                     ],
                     "oneOf": [
                         {

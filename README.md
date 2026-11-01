@@ -8,7 +8,11 @@ Open a folder on Visual Studio Code and choose "Convert Markdown to EPUB/MOBI" i
 
 ## Settings
 
-By default, every file will be converted into .epub or .mobi files (choose the output type in the md2reader.type parameter), and saved into the folder specified in the md2reader.outputDir.
+By default, every file will be converted into .epub files and saved into the folder specified in md2reader.outputDir.
+
+### Conversion types (EPUB / MOBI)
+
+You can choose the output format(s) using the md2reader.type setting ("epub", "mobi", or both ["epub", "mobi"]). To enable MOBI conversion, make sure [Kindlegen](#requirements) is installed and add "mobi" to your VS Code settings ("md2reader.type": ["epub", "mobi"], or "md2reader.type": "mobi" for MOBI only).
 
 ### Only one epub/mobi file
 

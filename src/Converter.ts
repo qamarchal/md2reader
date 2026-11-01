@@ -26,16 +26,12 @@ export class Converter {
         }
         this.epub = types.indexOf("epub") > -1;
         this.mobi = types.indexOf("mobi") > -1;
-        try {
-            childprocess.execSync("pandoc -h");
-        } catch (e) {
+        if (childprocess.spawnSync("pandoc", ["-v"]).error) {
             vscode.window.showErrorMessage("Pandoc is not installed");
             return;
         }
         if (this.mobi) {
-            try {
-                childprocess.execSync("kindlegen");
-            } catch (e) {
+            if (childprocess.spawnSync("kindlegen").error) {
                 vscode.window.showErrorMessage("Kindlegen is not installed");
                 this.mobi = false;
             }
