@@ -67,14 +67,17 @@ export class Converter {
         let execOptions = { cwd: cwd || vscode.workspace.rootPath || this.outputDir };
         let tempDir = temp.mkdirSync('md2reader');
         if (this.epub) {
+            let epubFile = path.join(this.outputDir, name + ".epub");
             let args = input.concat([
-                path.join(this.outputDir, name + ".epub"),
+                epubFile,
                 "--css=" + this.css
             ]).concat(this.pandocArgs);
             childprocess.execFile(this.pandoc, args, execOptions, function(err, stdout, stderr) {
                 if (err) {
                     vscode.window.showErrorMessage(stderr || err.message);
+                    return;
                 }
+                vscode.window.showInformationMessage("EPUB generated: " + epubFile);
                 console.log(stdout);
             });
         }
@@ -116,9 +119,13 @@ export class Converter {
                             fs.copyFile(src, dest, (copyErr) => {
                                 if (copyErr) {
                                     vscode.window.showErrorMessage(copyErr.message);
+                                } else {
+                                    vscode.window.showInformationMessage("MOBI generated: " + dest);
                                 }
                                 fs.unlink(src, () => {});
                             });
+                        } else {
+                            vscode.window.showInformationMessage("MOBI generated: " + dest);
                         }
                     });
                 });
