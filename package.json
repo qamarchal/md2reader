@@ -2,7 +2,7 @@
     "name": "md2reader",
     "displayName": "md2reader",
     "description": "Markdown to epub/mobi converter",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "publisher": "gdrtf",
     "engines": {
         "vscode": "^1.10.0"
@@ -15,7 +15,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/gdrtf/md2reader.git"
+        "url": "https://github.com/qamarchal/md2reader.git"
     },
     "categories": [
         "Other"
@@ -84,7 +84,7 @@
                 },
                 "md2reader.outputFile": {
                     "title": "Name of the epub/mobi file",
-                    "description": "Only if md2reader.single is true",
+                    "description": "Only if md2reader.singleOutput is true",
                     "type": "string",
                     "default": "Untitled"
                 },
