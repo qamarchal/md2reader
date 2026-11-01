@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
     let disposable = vscode.commands.registerCommand('md2reader.convert', () => {
         temp.track();
         let config = vscode.workspace.getConfiguration("md2reader");
-        let workingDir = config.get<string>('workingDir');
+        let workingDir = config.get<string>('workingDir') || ".";
         if (path.isAbsolute(workingDir)) {
             vscode.window.showErrorMessage("The working directory can only be relative to the workspace");
             return
@@ -38,6 +38,14 @@ export function activate(context: vscode.ExtensionContext) {
             }
             findPattern = path.posix.join(workingDir.replace(/\\/g, '/'), findPattern);
             vscode.workspace.findFiles(findPattern).then(files => {
+                if (files.length === 0) {
+                    if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.languageId == 'markdown') {
+                        converter.ExecuteFile(vscode.window.activeTextEditor.document.uri);
+                    } else {
+                        vscode.window.showErrorMessage('No markdown file found');
+                    }
+                    return;
+                }
                 var inputs: Array<string> = [];
                 files.sort().forEach(function (file, index) {
                     if (single) {

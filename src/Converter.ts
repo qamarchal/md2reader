@@ -6,19 +6,19 @@ import * as mkdirp from 'mkdirp';
 import * as temp from 'temp';
 
 export class Converter {
-    private outputDir: string;
+    private outputDir: string = "";
     private epub = false;
     private mobi = false;
-    private css: string;
-    private pandoc: string;
-    private kindlegen: string;
+    private css: string = "";
+    private pandoc: string = "pandoc";
+    private kindlegen: string = "kindlegen";
 
-    constructor(config) {
-        let type = config.get('type');
+    constructor(config: vscode.WorkspaceConfiguration) {
+        let type = config.get<string | Array<string>>('type');
         let types : Array<string> = [];
         if (typeof type == 'string') {
             types = [type];
-        } else {
+        } else if (type) {
             for (var index in type) {
                 types.push(type[index]);
             }
@@ -48,10 +48,10 @@ export class Converter {
         } else {
             this.css = path.join(__dirname, "..", "..", "ressources", "default.css");
         }
-        this.outputDir = Converter.ResolvePath(config.get('outputDir'), true);
+        this.outputDir = Converter.ResolvePath(config.get<string>('outputDir') || ".", true);
     }
 
-    public ExecuteFile(file) {
+    public ExecuteFile(file: vscode.Uri) {
         let basename = path.basename(file.path);
         let name = basename.substring(0, basename.lastIndexOf('.'));
         let input = [
@@ -61,14 +61,17 @@ export class Converter {
         this.Execute(input, name);
     }
 
-    public Execute(input, name) {
+    public Execute(input: Array<string>, name: string) {
         let tempDir = temp.mkdirSync('md2reader');
         if (this.epub) {
             let args = input.concat([
                 path.join(this.outputDir, name + ".epub"),
-                "--epub-stylesheet=" + this.css
+                "--css=" + this.css
             ]);
             childprocess.execFile(this.pandoc, args, function(err, stdout, stderr) {
+                if (err) {
+                    vscode.window.showErrorMessage(stderr || err.message);
+                }
                 console.log(stdout);
             });
         }
@@ -86,6 +89,10 @@ export class Converter {
             let moveTo = this.outputDir;
             let kindlegen = this.kindlegen;
             childprocess.execFile(this.pandoc, args, function(err, stdout, stderr) {
+                if (err) {
+                    vscode.window.showErrorMessage(stderr || err.message);
+                    return;
+                }
                 console.log(stdout);
                 let mobiFile = name + ".mobi";
                 args = [
@@ -94,15 +101,19 @@ export class Converter {
                     mobiFile
                 ];
                 childprocess.execFile(kindlegen, args, function(err, stdout, stderr) {
+                    if (err && !fs.existsSync(path.join(tempDir, mobiFile))) {
+                        vscode.window.showErrorMessage(stderr || stdout || err.message);
+                        return;
+                    }
                     console.log(stdout);
-                    fs.rename(path.join(tempDir, mobiFile), path.join(moveTo, mobiFile))
+                    fs.rename(path.join(tempDir, mobiFile), path.join(moveTo, mobiFile), () => {});
                 });
             });
         }
     }
 
-    private static ResolvePath(uri, dir = false) {
-        let basePath = vscode.workspace.rootPath;
+    private static ResolvePath(uri: string, dir = false): string {
+        let basePath = vscode.workspace.rootPath || "";
         if (!basePath && vscode.window.activeTextEditor) {
             basePath = path.dirname(vscode.window.activeTextEditor.document.uri.fsPath);
         }
