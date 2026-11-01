@@ -12,6 +12,7 @@ export class Converter {
     private css: string = "";
     private pandoc: string = "pandoc";
     private kindlegen: string = "kindlegen";
+    private pandocArgs: Array<string> = [];
 
     constructor(config: vscode.WorkspaceConfiguration) {
         let type = config.get<string | Array<string>>('type');
@@ -30,6 +31,7 @@ export class Converter {
         this.mobi = types.indexOf("mobi") > -1;
         this.pandoc = Converter.ResolveExecutable(config.get<string>('pandocFile') || "pandoc", "pandoc");
         this.kindlegen = Converter.ResolveExecutable(config.get<string>('kindlegenFile') || "kindlegen", "kindlegen");
+        this.pandocArgs = config.get<Array<string>>('pandocArgs') || [];
         if (childprocess.spawnSync(this.pandoc, ["-v"]).error) {
             vscode.window.showErrorMessage("Pandoc is not installed");
             this.epub = false;
@@ -68,7 +70,7 @@ export class Converter {
             let args = input.concat([
                 path.join(this.outputDir, name + ".epub"),
                 "--css=" + this.css
-            ]);
+            ]).concat(this.pandocArgs);
             childprocess.execFile(this.pandoc, args, execOptions, function(err, stdout, stderr) {
                 if (err) {
                     vscode.window.showErrorMessage(stderr || err.message);
@@ -86,7 +88,7 @@ export class Converter {
                 "--ascii",
                 "-c",
                 this.css
-            ]);
+            ]).concat(this.pandocArgs);
             let moveTo = this.outputDir;
             let kindlegen = this.kindlegen;
             childprocess.execFile(this.pandoc, args, execOptions, function(err, stdout, stderr) {

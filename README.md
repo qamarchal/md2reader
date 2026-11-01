@@ -26,6 +26,10 @@ You can specify a css style for your epub/mobi files in the md2reader.cssFile se
 
 If pandoc or kindlegen are not in your system PATH, you can specify their full executable paths using "md2reader.pandocFile" and "md2reader.kindlegenFile".
 
+### Additional Pandoc arguments
+
+You can pass additional arguments to pandoc (such as "--toc" or "--epub-cover-image=cover.jpg") using the "md2reader.pandocArgs" setting.
+
 ## Requirements
 
 Pandoc:  http://pandoc.org/installing.html

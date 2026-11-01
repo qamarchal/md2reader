@@ -115,6 +115,15 @@
                     "description": "Path to the kindlegen executable",
                     "type": "string",
                     "default": "kindlegen"
+                },
+                "md2reader.pandocArgs": {
+                    "title": "Additional Pandoc arguments",
+                    "description": "Additional command-line arguments passed to pandoc (e.g. [\"--toc\"])",
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         }
