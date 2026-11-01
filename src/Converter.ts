@@ -28,8 +28,8 @@ export class Converter {
         }
         this.epub = types.indexOf("epub") > -1;
         this.mobi = types.indexOf("mobi") > -1;
-        this.pandoc = config.get('pandocFile') || "pandoc";
-        this.kindlegen = config.get('kindlegenFile') || "kindlegen";
+        this.pandoc = Converter.ResolveExecutable(config.get<string>('pandocFile') || "pandoc", "pandoc");
+        this.kindlegen = Converter.ResolveExecutable(config.get<string>('kindlegenFile') || "kindlegen", "kindlegen");
         if (childprocess.spawnSync(this.pandoc, ["-v"]).error) {
             vscode.window.showErrorMessage("Pandoc is not installed");
             this.epub = false;
@@ -122,6 +122,20 @@ export class Converter {
                 });
             });
         }
+    }
+
+    private static ResolveExecutable(cmd: string, defaultName: string): string {
+        if (!cmd || cmd === defaultName) {
+            return defaultName;
+        }
+        let resolved = Converter.ResolvePath(cmd);
+        if (fs.existsSync(resolved)) {
+            if (fs.statSync(resolved).isDirectory()) {
+                return path.join(resolved, defaultName);
+            }
+            return resolved;
+        }
+        return cmd;
     }
 
     private static ResolvePath(uri: string, dir = false): string {
