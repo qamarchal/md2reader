@@ -28,6 +28,8 @@ export class Converter {
         this.mobi = types.indexOf("mobi") > -1;
         if (childprocess.spawnSync("pandoc", ["-v"]).error) {
             vscode.window.showErrorMessage("Pandoc is not installed");
+            this.epub = false;
+            this.mobi = false;
             return;
         }
         if (this.mobi) {
@@ -95,9 +97,13 @@ export class Converter {
     }
 
     private static ResolvePath(uri, dir = false) {
+        let basePath = vscode.workspace.rootPath;
+        if (!basePath && vscode.window.activeTextEditor) {
+            basePath = path.dirname(vscode.window.activeTextEditor.document.uri.fsPath);
+        }
         try {
             if (!path.isAbsolute(uri)) {
-                uri = path.resolve(vscode.workspace.rootPath, uri);
+                uri = path.resolve(basePath, uri);
             }
             if (!dir) {
                 return uri;
@@ -108,7 +114,7 @@ export class Converter {
             return uri;
         } catch (e) {
             vscode.window.showInformationMessage('Path not found: ' + uri);
-            return vscode.workspace.rootPath;
+            return basePath;
         }
     }
 }

@@ -19,19 +19,24 @@ export function activate(context: vscode.ExtensionContext) {
             return
         }
         let converter = new Converter(config);
-        if (config.get<boolean>("onlyActiveFile")) {
+        if (config.get<boolean>("onlyActiveFile") || !vscode.workspace.rootPath) {
+            if (!vscode.window.activeTextEditor) {
+                vscode.window.showErrorMessage('No active document to convert');
+                return;
+            }
             var mode = vscode.window.activeTextEditor.document.languageId;
             if (mode != 'markdown') {
                 vscode.window.showErrorMessage('This document is not a markdown file');
                 return;
             }
+            converter.ExecuteFile(vscode.window.activeTextEditor.document.uri);
         } else {
             let single = config.get<boolean>('singleOutput');
             let findPattern = '*.md';
             if (config.get<boolean>('recurse')) {
-                findPattern = path.join('**', findPattern);
+                findPattern = path.posix.join('**', findPattern);
             }
-            findPattern = path.join(workingDir, findPattern);
+            findPattern = path.posix.join(workingDir.replace(/\\/g, '/'), findPattern);
             vscode.workspace.findFiles(findPattern).then(files => {
                 var inputs: Array<string> = [];
                 files.sort().forEach(function (file, index) {
@@ -41,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
                         converter.ExecuteFile(file);
                     }
                 });
-                if (single) {
+                if (single && inputs.length > 0) {
                     inputs.push("-o");
                     converter.Execute(inputs, config.get('outputFile', "Untitled"));
                 }
