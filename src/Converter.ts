@@ -58,17 +58,18 @@ export class Converter {
             file.fsPath,
             "-o"
         ];
-        this.Execute(input, name);
+        this.Execute(input, name, path.dirname(file.fsPath));
     }
 
-    public Execute(input: Array<string>, name: string) {
+    public Execute(input: Array<string>, name: string, cwd?: string) {
+        let execOptions = { cwd: cwd || vscode.workspace.rootPath || this.outputDir };
         let tempDir = temp.mkdirSync('md2reader');
         if (this.epub) {
             let args = input.concat([
                 path.join(this.outputDir, name + ".epub"),
                 "--css=" + this.css
             ]);
-            childprocess.execFile(this.pandoc, args, function(err, stdout, stderr) {
+            childprocess.execFile(this.pandoc, args, execOptions, function(err, stdout, stderr) {
                 if (err) {
                     vscode.window.showErrorMessage(stderr || err.message);
                 }
@@ -88,7 +89,7 @@ export class Converter {
             ]);
             let moveTo = this.outputDir;
             let kindlegen = this.kindlegen;
-            childprocess.execFile(this.pandoc, args, function(err, stdout, stderr) {
+            childprocess.execFile(this.pandoc, args, execOptions, function(err, stdout, stderr) {
                 if (err) {
                     vscode.window.showErrorMessage(stderr || err.message);
                     return;
