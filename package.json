@@ -99,6 +99,18 @@
                             }
                         }
                     ]
+                },
+                "md2reader.pandocFile": {
+                    "title": "Pandoc executable file",
+                    "description": "Path to the pandoc executable",
+                    "type": "string",
+                    "default": "pandoc"
+                },
+                "md2reader.kindlegenFile": {
+                    "title": "Kindlegen executable file",
+                    "description": "Path to the kindlegen executable",
+                    "type": "string",
+                    "default": "kindlegen"
                 }
             }
         }

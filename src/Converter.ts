@@ -10,6 +10,8 @@ export class Converter {
     private epub = false;
     private mobi = false;
     private css: string;
+    private pandoc: string;
+    private kindlegen: string;
 
     constructor(config) {
         let type = config.get('type');
@@ -26,14 +28,16 @@ export class Converter {
         }
         this.epub = types.indexOf("epub") > -1;
         this.mobi = types.indexOf("mobi") > -1;
-        if (childprocess.spawnSync("pandoc", ["-v"]).error) {
+        this.pandoc = config.get('pandocFile') || "pandoc";
+        this.kindlegen = config.get('kindlegenFile') || "kindlegen";
+        if (childprocess.spawnSync(this.pandoc, ["-v"]).error) {
             vscode.window.showErrorMessage("Pandoc is not installed");
             this.epub = false;
             this.mobi = false;
             return;
         }
         if (this.mobi) {
-            if (childprocess.spawnSync("kindlegen").error) {
+            if (childprocess.spawnSync(this.kindlegen).error) {
                 vscode.window.showErrorMessage("Kindlegen is not installed");
                 this.mobi = false;
             }
@@ -64,7 +68,7 @@ export class Converter {
                 path.join(this.outputDir, name + ".epub"),
                 "--epub-stylesheet=" + this.css
             ]);
-            childprocess.execFile("pandoc", args, function(err, stdout, stderr) {
+            childprocess.execFile(this.pandoc, args, function(err, stdout, stderr) {
                 console.log(stdout);
             });
         }
@@ -80,7 +84,8 @@ export class Converter {
                 this.css
             ]);
             let moveTo = this.outputDir;
-            childprocess.execFile("pandoc", args, function(err, stdout, stderr) {
+            let kindlegen = this.kindlegen;
+            childprocess.execFile(this.pandoc, args, function(err, stdout, stderr) {
                 console.log(stdout);
                 let mobiFile = name + ".mobi";
                 args = [
@@ -88,7 +93,7 @@ export class Converter {
                     "-o",
                     mobiFile
                 ];
-                childprocess.execFile("kindlegen", args, function(err, stdout, stderr) {
+                childprocess.execFile(kindlegen, args, function(err, stdout, stderr) {
                     console.log(stdout);
                     fs.rename(path.join(tempDir, mobiFile), path.join(moveTo, mobiFile))
                 });

@@ -26,6 +26,10 @@ The md2reader.onlyActiveFile setting allows you to only convert the active file 
 
 You can specify a css style for your epub/mobi files in the md2reader.cssFile setting. The path to this css file can be absolute or relative to you workspace.
 
+### Executable files
+
+If pandoc or kindlegen are not in your system PATH, you can specify their full executable paths using "md2reader.pandocFile" and "md2reader.kindlegenFile".
+
 ## Requirements
 
 Pandoc:  http://pandoc.org/installing.html
