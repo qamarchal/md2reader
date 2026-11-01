@@ -14,7 +14,7 @@ export class Converter {
     private kindlegen: string = "kindlegen";
     private pandocArgs: Array<string> = [];
 
-    constructor(config: vscode.WorkspaceConfiguration) {
+    constructor(config: vscode.WorkspaceConfiguration, fallbackDir?: string) {
         let type = config.get<string | Array<string>>('type');
         let types : Array<string> = [];
         if (typeof type == 'string') {
@@ -29,8 +29,8 @@ export class Converter {
         }
         this.epub = types.indexOf("epub") > -1;
         this.mobi = types.indexOf("mobi") > -1;
-        this.pandoc = Converter.ResolveExecutable(config.get<string>('pandocFile') || "pandoc", "pandoc");
-        this.kindlegen = Converter.ResolveExecutable(config.get<string>('kindlegenFile') || "kindlegen", "kindlegen");
+        this.pandoc = Converter.ResolveExecutable(config.get<string>('pandocFile') || "pandoc", "pandoc", fallbackDir);
+        this.kindlegen = Converter.ResolveExecutable(config.get<string>('kindlegenFile') || "kindlegen", "kindlegen", fallbackDir);
         this.pandocArgs = config.get<Array<string>>('pandocArgs') || [];
         if (childprocess.spawnSync(this.pandoc, ["-v"]).error) {
             vscode.window.showErrorMessage("Pandoc is not installed");
@@ -46,11 +46,11 @@ export class Converter {
         }
         this.css = config.get('cssFile') as string;
         if (this.css) {
-            this.css = Converter.ResolvePath(this.css);
+            this.css = Converter.ResolvePath(this.css, false, fallbackDir);
         } else {
             this.css = path.join(__dirname, "..", "..", "ressources", "default.css");
         }
-        this.outputDir = Converter.ResolvePath(config.get<string>('outputDir') || ".", true);
+        this.outputDir = Converter.ResolvePath(config.get<string>('outputDir') || ".", true, fallbackDir);
     }
 
     public ExecuteFile(file: vscode.Uri) {
@@ -65,9 +65,10 @@ export class Converter {
 
     public Execute(input: Array<string>, name: string, cwd?: string) {
         let execOptions = { cwd: cwd || vscode.workspace.rootPath || this.outputDir };
+        let outputDir = this.outputDir || cwd || "";
         let tempDir = temp.mkdirSync('md2reader');
         if (this.epub) {
-            let epubFile = path.join(this.outputDir, name + ".epub");
+            let epubFile = path.join(outputDir, name + ".epub");
             let args = input.concat([
                 epubFile,
                 "--css=" + this.css
@@ -92,7 +93,7 @@ export class Converter {
                 "-c",
                 this.css
             ]).concat(this.pandocArgs);
-            let moveTo = this.outputDir;
+            let moveTo = outputDir;
             let kindlegen = this.kindlegen;
             childprocess.execFile(this.pandoc, args, execOptions, function(err, stdout, stderr) {
                 if (err) {
@@ -133,11 +134,11 @@ export class Converter {
         }
     }
 
-    private static ResolveExecutable(cmd: string, defaultName: string): string {
+    private static ResolveExecutable(cmd: string, defaultName: string, fallbackDir?: string): string {
         if (!cmd || cmd === defaultName) {
             return defaultName;
         }
-        let resolved = Converter.ResolvePath(cmd);
+        let resolved = Converter.ResolvePath(cmd, false, fallbackDir);
         if (fs.existsSync(resolved)) {
             if (fs.statSync(resolved).isDirectory()) {
                 return path.join(resolved, defaultName);
@@ -147,8 +148,8 @@ export class Converter {
         return cmd;
     }
 
-    private static ResolvePath(uri: string, dir = false): string {
-        let basePath = vscode.workspace.rootPath || "";
+    private static ResolvePath(uri: string, dir = false, fallbackDir?: string): string {
+        let basePath = vscode.workspace.rootPath || fallbackDir || "";
         if (!basePath && vscode.window.activeTextEditor) {
             basePath = path.dirname(vscode.window.activeTextEditor.document.uri.fsPath);
         }

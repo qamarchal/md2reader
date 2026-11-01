@@ -41,6 +41,22 @@
                 "title": "Convert Workspace Markdown to EPUB/MOBI"
             }
         ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "md2reader.convertFile",
+                    "when": "resourceExtname == .md",
+                    "group": "navigation"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "md2reader.convertFile",
+                    "when": "editorLangId == markdown",
+                    "group": "navigation"
+                }
+            ]
+        },
         "configuration": {
             "title": "md2reader configuration",
             "properties": {

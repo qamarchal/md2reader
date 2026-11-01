@@ -29,7 +29,7 @@ function convertFiles(files: Array<vscode.Uri>, config: vscode.WorkspaceConfigur
         vscode.window.showErrorMessage('No markdown file found');
         return;
     }
-    let converter = new Converter(config);
+    let converter = new Converter(config, cwd);
     let single = config.get<boolean>('singleOutput');
     var inputs: Array<string> = [];
     files.sort((a, b) => a.fsPath.localeCompare(b.fsPath)).forEach(function (file) {
@@ -49,21 +49,26 @@ function convertFiles(files: Array<vscode.Uri>, config: vscode.WorkspaceConfigur
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-    let convertFile = vscode.commands.registerCommand('md2reader.convertFile', () => {
+    let convertFile = vscode.commands.registerCommand('md2reader.convertFile', (uri?: vscode.Uri) => {
         temp.track();
-        if (!vscode.window.activeTextEditor) {
-            vscode.window.showErrorMessage('No active document to convert');
-            return;
+        let targetUri = uri;
+        if (!targetUri) {
+            if (!vscode.window.activeTextEditor) {
+                vscode.window.showErrorMessage('No active document to convert');
+                return;
+            }
+            if (vscode.window.activeTextEditor.document.languageId != 'markdown') {
+                vscode.window.showErrorMessage('This document is not a markdown file');
+                return;
+            }
+            targetUri = vscode.window.activeTextEditor.document.uri;
         }
-        if (vscode.window.activeTextEditor.document.languageId != 'markdown') {
-            vscode.window.showErrorMessage('This document is not a markdown file');
-            return;
-        }
-        let targetUri = vscode.window.activeTextEditor.document.uri;
         vscode.workspace.saveAll(false).then(() => {
-            let config = vscode.workspace.getConfiguration("md2reader");
-            let converter = new Converter(config);
-            converter.ExecuteFile(targetUri);
+            if (targetUri) {
+                let config = vscode.workspace.getConfiguration("md2reader");
+                let converter = new Converter(config, path.dirname(targetUri.fsPath));
+                converter.ExecuteFile(targetUri);
+            }
         });
     });
 
